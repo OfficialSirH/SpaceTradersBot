@@ -1,0 +1,11 @@
+name = "spacetradersbot"
+type = "javascript"
+zone_id = ""
+account_id = "6b10fc81a987f37bc4857ad25c865992"
+route = ""
+workers_dev = true
+
+[build]
+command = "npm install && npm run build"
+[build.upload]
+format = "service-worker"
