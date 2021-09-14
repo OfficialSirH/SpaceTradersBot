@@ -1,11 +1,23 @@
 import nacl from "tweetnacl";
-import { InteractionHandler } from "./types";
-import { RESTPostAPIApplicationCommandsJSONBody, APIInteraction, InteractionType, InteractionResponseType } from 'discord-api-types';
+import type { SlashCommand } from "./types";
+import { APIInteraction, InteractionType } from 'discord-api-types';
+import unknownCommand from './unknownCommand'; 
+import type { InteractionHandlerReturn } from ".";
 
-const jsonResponse = (data: any) =>
-  new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" },
-  });
+const isFileUpload = (data: InteractionHandlerReturn) =>
+  data.files && data.files.length > 0;
+
+const formDataResponse = (data: InteractionHandlerReturn) => {
+  const formData = new FormData();
+  data.files?.forEach((file) => formData.append(file.name, file.data, file.name));
+  delete data.files;
+  formData.append("payload_json", JSON.stringify(data));
+  return new Response(formData);
+};
+
+const jsonResponse = (data: InteractionHandlerReturn) =>
+  isFileUpload(data) ? formDataResponse(data) : 
+  new Response(JSON.stringify(data), { headers: { "Content-Type": "application/json" } });
 
 const makeValidator = ({ publicKey }: { publicKey: string }) => async (
   request: Request
@@ -23,51 +35,34 @@ const makeValidator = ({ publicKey }: { publicKey: string }) => async (
   if (!isValid) throw new Error("Invalid request");
 };
 
-const DEFAULT_COMMAND: RESTPostAPIApplicationCommandsJSONBody = {
-  name: "ping",
-  description: "ping pong",
-};
-
-const DEFAULT_HANDLER: InteractionHandler = () => ({
-  type: InteractionResponseType.Pong,
-});
-
 export const interaction = ({
   publicKey,
   commands,
 }: {
   publicKey: string;
-  commands: [RESTPostAPIApplicationCommandsJSONBody, InteractionHandler, boolean][];
+  commands: Array<SlashCommand>;
 }) => {
   const validateRequest = makeValidator({ publicKey });
 
   return async (request: Request) => {
-    try {
-      await validateRequest(request.clone());
-
-      try {
-        const interaction = (await request.json()) as APIInteraction;
-
+    return validateRequest(request.clone())
+    .then(async () => {
+      return (request.json() as Promise<APIInteraction>)
+      .then(async interaction => {
         if (interaction.type == InteractionType.Ping) {
           return jsonResponse({ type: 1 });
         } else if (interaction.type == InteractionType.ApplicationCommand) {
-          const [command, handler, isGuild]: [
-            RESTPostAPIApplicationCommandsJSONBody,
-            InteractionHandler,
-            boolean
-          ] = commands.find(
-            ([command, handler, isGuild]) => command.name === interaction.data.name
-          ) || [DEFAULT_COMMAND, DEFAULT_HANDLER, true];
+          const command = commands.find(
+            command => command.data.name === interaction.data.name
+          ) as SlashCommand || unknownCommand;
 
-          return jsonResponse(await handler(interaction));
+          return jsonResponse(await command.handle(interaction));
         } else if (interaction.type == InteractionType.MessageComponent) {
           return jsonResponse({ type: 1 });
         }
-      } catch (e) {
-        return new Response(null, { status: 400 });
-      }
-    } catch (e) {
-      return new Response(null, { status: 401 });
-    }
+      })
+      .catch(() => new Response(null, { status: 400 }));
+    })
+    .catch(() => new Response(null, { status: 401 })) as Promise<Response>;
   };
 };

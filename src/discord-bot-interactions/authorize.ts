@@ -1,10 +1,10 @@
 export const authorize = ({
-    applicationID,
+    applicationId,
   }: {
-    applicationID: string;
+    applicationId: string;
   }) => async (): Promise<Response> => {
     const urlSearchParams = new URLSearchParams({
-      client_id: applicationID,
+      client_id: applicationId,
       scope: encodeURIComponent("applications.commands"),
     });
     const redirectURL = new URL("https://discord.com/api/oauth2/authorize");

@@ -1,26 +1,25 @@
-import { InteractionHandler } from "./types";
-import { RESTPostAPIApplicationCommandsJSONBody } from "discord-api-types";
 import { Router } from "@glenstack/cf-workers-router";
 import { authorize } from "./authorize";
 import { interaction } from "./interaction";
 import { setup } from "./setup";
+import type { SlashCommand } from "./types";
 export * from "./types";
 
 const router = new Router();
 
 export const createSlashCommandHandler = ({
-  applicationID,
+  applicationId,
   applicationSecret,
   publicKey,
   commands,
 }: {
-  applicationID: string;
+  applicationId: string;
   applicationSecret: string;
   publicKey: string;
-  commands: [RESTPostAPIApplicationCommandsJSONBody, InteractionHandler, boolean][];
+  commands: Array<SlashCommand>;
 }) => {
-  router.get("/", authorize({ applicationID }));
-  router.post("/interaction", interaction({ publicKey, commands }) as any);
-  router.get("/setup", setup({ applicationID, applicationSecret, commands }));
+  router.get("/", authorize({ applicationId }));
+  router.post("/interaction", interaction({ publicKey, commands }));
+  router.get("/setup", setup({ applicationId, applicationSecret, commands }));
   return (request: Request) => router.route(request);
 };
