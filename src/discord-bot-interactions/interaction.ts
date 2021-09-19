@@ -9,7 +9,7 @@ const isFileUpload = (data: InteractionHandlerReturn) =>
 
 const formDataResponse = (data: InteractionHandlerReturn) => {
   const formData = new FormData();
-  data.files?.forEach((file) => formData.append(file.name, file.data, file.name));
+  data.files?.forEach((file) => formData.append(file.name, new Blob([file.data]), file.name));
   delete data.files;
   formData.append("payload_json", JSON.stringify(data));
   return new Response(formData);

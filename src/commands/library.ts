@@ -1,5 +1,5 @@
 import { APIInteractionResponseCallbackData, ApplicationCommandOptionType, InteractionResponseType } from 'discord-api-types';
-import type { DiscordFile, InteractionHandlerReturn, SlashCommand } from '../discord-bot-interactions/types';
+import type { InteractionHandlerReturn, SlashCommand } from '../discord-bot-interactions/types';
 
 const library: SlashCommand = {
     data: {
@@ -23,7 +23,7 @@ const library: SlashCommand = {
             type: InteractionResponseType.ChannelMessageWithSource,
             data: { }
         } as InteractionHandlerReturn;
-        libraryStructures.includes(query) ? result.files?.push({ name: `${query}.js`, data: 'no' }) : 
+        libraryStructures.includes(query) ? result.files?.push({ name: `${query}.js`, data: `it's supposed to be ${query} data, but library is being a poopoo right now so I'm having it default to this, sowwy.` }) : 
         ((result as any).data as APIInteractionResponseCallbackData).content = 'No results found';
         return result;
     }

@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "A bot that uses spacetraders.ts to interact with the SpaceTraders API",
   "main": "dist/worker.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OfficialSirH/SpaceTradersBot"
+  },
   "scripts": {
     "build": "webpack",
     "format": "prettier --write  '*.{json,js}' 'src/**/*.{js,ts}' 'test/**/*.{js,ts}'",
